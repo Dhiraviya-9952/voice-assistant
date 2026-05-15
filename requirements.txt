@@ -151,7 +151,6 @@ python-dotenv==1.0.1
 python-iso639==2024.2.7
 python-magic==0.4.27
 pytz==2024.1
-pywin32==306
 PyYAML==6.0.1
 pyzmq==25.1.2
 qdrant-client==1.8.0
