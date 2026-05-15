@@ -19,7 +19,7 @@ def record_audio_chunk(audio, stream, chunk_length=DEFAULT_CHUNK_LENGTH):
     frames = []
     has_started_speaking = False
     silence_frames = 0
-    max_silence_frames = int(16000 / 1024 * 0.6)  # 0.6 second of silence for faster response
+    max_silence_frames = int(16000 / 1024 * 1.0)  # 1.0 second of silence before processing
     
     # We will record up to chunk_length seconds, but break early if silence after speech
     for _ in range(0, int(16000 / 1024 * chunk_length)):
