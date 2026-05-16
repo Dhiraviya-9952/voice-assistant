@@ -71,40 +71,29 @@ Do NOT mention "Sid" or "Rezilyens" unless specifically asked for your name or i
     def interact_with_llm(self, customer_query: str):
         normalized = customer_query.strip().rstrip('.,!?').lower()
         
-        # Handle identity questions directly
-        if any(q in normalized for q in ["name", "who are you", "yourself", "who is sid"]):
-            yield "Hey, I'm Sid, the virtual assistant of Rezilyens. I'm here to help you with information about our organization and answer any questions you may have."
-            return
+        # Identity: ONLY fire for direct questions about the assistant itself
+        identity_triggers = [
+            r"who are you", r"what is your name", r"tell me about yourself",
+            r"introduce yourself", r"who is sid", r"what's your name"
+        ]
+        if any(re.search(trigger, normalized) for trigger in identity_triggers):
+            # Only trigger if the question is ONLY about identity, not a longer question containing 'name'
+            if len(normalized.split()) < 10:
+                yield "Hey, I'm Sid, the virtual assistant of Rezilyens. I'm here to help you with information about our organization and answer any questions you may have."
+                return
 
-        # Handle greetings directly
-        if any(g == normalized for g in ["hello", "hi", "hey", "hi there", "hello there", "hey there", "howdy"]):
-            yield "Hello, how can I assist you?"
-            return
-
-        # Handle specific social questions with flexible matching
-        if "can we be friends" in normalized:
-            yield "Of course! I'm happy to be your assistant and friend."
-            return
-            
-        if "how are you" in normalized or "how was your day" in normalized:
-            yield "I'm doing well, thank you! I'm here to help you."
-            return
-
-        if "interrupt" in normalized or "interruption" in normalized:
-            yield "Yes, I can handle interruptions and respond to you instantly."
-            return
-
-        # Handle other social phrases
-        social = {
-            "thank you": "You're welcome! Let me know if you have any other questions.",
-            "thanks": "You're welcome! Feel free to ask anything.",
-            "ok": "Sure, let me know if you need anything!",
-            "okay": "Sure, let me know if you need anything!",
+        # Simple social bypass to keep it fast
+        social_map = {
+            "hello": "Hello! How can I help you today?",
+            "hi": "Hi there! What can I do for you?",
+            "hey": "Hey! How's it going?",
+            "how are you": "I'm doing great, thank you! How are you?",
+            "thank you": "You're very welcome!",
+            "thanks": "Anytime! Happy to help.",
             "bye": "Goodbye! Have a great day!",
-            "goodbye": "Goodbye! Have a great day!",
         }
-        if normalized in social:
-            yield social[normalized]
+        if normalized in social_map:
+            yield social_map[normalized]
             return
 
         action = self.detect_action(customer_query)
@@ -127,17 +116,25 @@ Do NOT mention "Sid" or "Rezilyens" unless specifically asked for your name or i
             yield answer
             return
 
-        # Standard LLM flow - NO history passed to avoid 1B model confusion
+        # Standard LLM flow
         now = datetime.datetime.now()
         current_time = now.strftime("%I:%M %p")
         current_date = now.strftime("%A, %B %d, %Y")
 
-        prompt = f"""{self.system_prompt}
+        # Refined system prompt for Gemini/ChatGPT-like behavior
+        professional_prompt = """You are a highly intelligent and helpful AI assistant, similar to Gemini or ChatGPT.
+Your name is Sid, and you are developed by Rezilyens.
+RESPONSE RULES:
+1. Be direct, concise, and professional.
+2. If the user asks a riddle or a fact, answer it accurately and immediately.
+3. Keep responses to 1-2 sentences unless a longer explanation is absolutely necessary.
+4. Do NOT repeat your name or identity unless specifically asked.
+5. If you don't know the answer, say so politely instead of guessing.
+6. Current context: Time is {time}, Date is {date}."""
 
-[HIDDEN SYSTEM INFO: Current Time: {current_time}, Current Date: {current_date}]
+        prompt = f"""{professional_prompt.format(time=current_time, date=current_date)}
 
-User question: {customer_query}
-Answer directly and only about this question. Do not bring up any other topic.
+User: {customer_query}
 Assistant:"""
 
         try:
@@ -148,10 +145,11 @@ Assistant:"""
                     "prompt": prompt,
                     "stream": True,
                     "options": {
-                        "num_predict": 150,
-                        "temperature": 0.7,
-                        "repeat_penalty": 1.2,
-                        "stop": ["\nUser:", "\nAssistant:", "<|im_end|>"]
+                        "num_predict": 100,
+                        "temperature": 0.3, # Lower temperature for higher accuracy
+                        "top_p": 0.9,
+                        "repeat_penalty": 1.1,
+                        "stop": ["User:", "Assistant:", "\n"]
                     }
                 },
                 stream=True,
@@ -166,18 +164,11 @@ Assistant:"""
                         chunk = data.get("response", "")
                         full_answer += chunk
                         yield chunk
+                        if data.get("done", False): break
+                    except Exception: pass
                         
-                        if data.get("done", False):
-                            break
-                    except Exception:
-                        pass
-                        
-            clean_answer = full_answer.strip()
-            for marker in ["User:", "Assistant:", "Previous:", "Context:"]:
-                clean_answer = clean_answer.replace(marker, "")
-                
             self.memory.append(f"User asked: {customer_query}")
                 
         except Exception as e:
             print(f"LLM Error: {e}")
-            yield "I had trouble with that."
+            yield "I'm sorry, I'm having trouble processing that right now."

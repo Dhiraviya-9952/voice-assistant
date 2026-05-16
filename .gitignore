@@ -219,3 +219,8 @@ __marimo__/
 
 # Audio files
 *.mp3
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+.env
