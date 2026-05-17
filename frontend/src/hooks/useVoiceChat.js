@@ -20,10 +20,15 @@ export function useVoiceChat() {
   const awaitPlaybackRef       = useRef(false);
   const reconnectTimerRef      = useRef(null);
 
+  const audioCtxRef            = useRef(null);
+  const analyserRef            = useRef(null);
+  const activeAudioRef         = useRef(null);
+
   // ── Audio playback queue ──────────────────────────────────────
   const playNext = useCallback(() => {
     if (audioQueueRef.current.length === 0) {
       isPlayingRef.current = false;
+      window.assistantVolume = 0;
       if (awaitPlaybackRef.current && wsRef.current?.readyState === WebSocket.OPEN) {
         wsRef.current.send(JSON.stringify({ type: 'playback_done' }));
         awaitPlaybackRef.current = false;
@@ -33,8 +38,45 @@ export function useVoiceChat() {
     isPlayingRef.current = true;
     const url = audioQueueRef.current.shift();
     const audio = new Audio(url);
-    audio.onended = () => { URL.revokeObjectURL(url); playNext(); };
-    audio.onerror = () => { URL.revokeObjectURL(url); playNext(); };
+    activeAudioRef.current = audio;
+    
+    // Connect to Web Audio Analyser
+    const ctx = audioCtxRef.current;
+    if (ctx) {
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
+      try {
+        const source = ctx.createMediaElementSource(audio);
+        if (!analyserRef.current) {
+          const analyser = ctx.createAnalyser();
+          analyser.fftSize = 32;
+          analyserRef.current = analyser;
+          analyser.connect(ctx.destination);
+          window.assistantAnalyser = analyser;
+        }
+        source.connect(analyserRef.current);
+      } catch (err) {
+        console.warn("Web Audio Analyser hook warning:", err);
+      }
+    }
+    
+    audio.onended = () => { 
+      if (activeAudioRef.current === audio) {
+        activeAudioRef.current = null;
+      }
+      URL.revokeObjectURL(url); 
+      playNext(); 
+    };
+    
+    audio.onerror = () => { 
+      if (activeAudioRef.current === audio) {
+        activeAudioRef.current = null;
+      }
+      URL.revokeObjectURL(url); 
+      playNext(); 
+    };
+    
     audio.play().catch(() => playNext());
   }, []);
 
@@ -113,6 +155,13 @@ export function useVoiceChat() {
             // Clear audio queue — assistant is about to speak
             audioQueueRef.current = [];
             isPlayingRef.current  = false;
+            try {
+              activeAudioRef.current?.pause();
+              if (activeAudioRef.current?.src) {
+                URL.revokeObjectURL(activeAudioRef.current.src);
+              }
+            } catch (err) {}
+            activeAudioRef.current = null;
             break;
 
           case 'stream_start':
@@ -188,7 +237,13 @@ export function useVoiceChat() {
         if (!micActive) return;
 
         ctx = new AudioContext({ sampleRate: 48000 });
+        audioCtxRef.current = ctx;
         const source = ctx.createMediaStreamSource(micStream);
+        
+        // 2x digital gain boost to ensure laptop microphones capture speech perfectly from a distance
+        const gainNode = ctx.createGain();
+        gainNode.gain.value = 2.0;
+        
         processor = ctx.createScriptProcessor(1024, 1, 1);
         processor.onaudioprocess = (ev) => {
           // Optimization: Only send audio if the assistant is idle or listening.
@@ -201,7 +256,8 @@ export function useVoiceChat() {
             wsRef.current.send(ev.inputBuffer.getChannelData(0).buffer);
           }
         };
-        source.connect(processor);
+        source.connect(gainNode);
+        gainNode.connect(processor);
         processor.connect(ctx.destination);
         console.log('🎙️ Microphone active');
       } catch (err) {

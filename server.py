@@ -18,17 +18,19 @@ app = FastAPI()
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 # --- AUDIO SETTINGS ---
-SILENCE_THRESHOLD = 0.08  # Increased to match terminal-like sensitivity (1200/32768 approx 0.036, but float needs more buffer)
-RMS_THRESHOLD = 0.025
+SILENCE_THRESHOLD = 0.036  # Matches terminal app sensitivity (1200/32768)
+RMS_THRESHOLD = 0.015
 MAX_SILENCE_SECS = 1.0
-MIN_SPEECH_SECS = 0.5     # Slightly longer to filter out coughs/noises
+MIN_SPEECH_SECS = 0.5
 SAMPLE_RATE = 48000
 CHUNK_SIZE = 1024
 
 # Common Whisper hallucinations to ignore
 HALLUCINATIONS = [
     r"thank you", r"i'm sorry", r"you're welcome", r"subscribe to", 
-    r"i'm going to have a fight", r"watch more", r"thanks for watching"
+    r"i'm going to have a fight", r"watch more", r"thanks for watching",
+    r"^\s*you\s*$", r"^\s*yeah\s*$", r"^\s*so\s*$", r"^\s*go to\s*$", r"^\s*bye\s*$",
+    r"^\s*thank you very much\s*$", r"^\s*thank you for watching\s*$"
 ]
 
 executor = ThreadPoolExecutor(max_workers=8)
@@ -119,8 +121,17 @@ async def ws_handler(websocket: WebSocket):
                     # Transcribe
                     audio_16k = full_audio[::3]
                     def _transcribe():
-                        # Increased beam size to 5 for better stability against noise
-                        segs, _ = whisper_model.transcribe(audio_16k, beam_size=5, vad_filter=True)
+                        # Highly optimized Whisper transcription parameters for maximum accuracy from a distance
+                        segs, _ = whisper_model.transcribe(
+                            audio_16k,
+                            language="en",
+                            beam_size=2,
+                            vad_filter=True,
+                            vad_parameters=dict(min_speech_duration_ms=400, min_silence_duration_ms=800),
+                            condition_on_previous_text=False,
+                            temperature=[0.0, 0.2, 0.4],
+                            no_speech_threshold=0.6
+                        )
                         return " ".join(s.text for s in segs).strip()
                     
                     text = await asyncio.get_event_loop().run_in_executor(executor, _transcribe)
