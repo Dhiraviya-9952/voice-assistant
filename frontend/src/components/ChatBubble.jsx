@@ -12,13 +12,13 @@ function TypedText({ text, isStreaming }) {
 }
 
 const KyureeusLogo = () => (
-  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10 overflow-hidden flex-shrink-0">
+  <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center border border-[var(--border-subtle)] overflow-hidden flex-shrink-0">
     <img src="/kyureeus_logo2.png" alt="K" className="w-full h-full object-contain scale-110" />
   </div>
 );
 
 const UserAvatar = () => (
-  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10 overflow-hidden flex-shrink-0 shadow-lg">
+  <div className="w-10 h-10 rounded-full bg-[var(--bg-secondary)] flex items-center justify-center border border-[var(--border-subtle)] overflow-hidden flex-shrink-0 shadow-lg">
     <img src="/user_avatar.png" alt="User" className="w-full h-full object-cover scale-150" />
   </div>
 );
@@ -41,12 +41,12 @@ export default function ChatBubble({ message, isLatest }) {
         <div
           className={`px-5 py-3.5 rounded-3xl text-sm leading-relaxed ${
             isAssistant 
-              ? 'bg-[#12121a] text-zinc-300 border border-white/5' 
+              ? 'bg-[var(--bubble-assistant-bg)] text-[var(--text-primary)] border border-[var(--bubble-assistant-border)]' 
               : 'bg-gradient-to-br from-indigo-600 to-blue-700 text-white font-medium'
           }`}
           style={{
             backdropFilter: 'blur(10px)',
-            boxShadow: isAssistant ? '0 10px 30px -10px rgba(0,0,0,0.5)' : '0 10px 30px -10px rgba(37, 99, 235, 0.3)'
+            boxShadow: isAssistant ? '0 10px 30px -10px var(--bubble-assistant-shadow)' : '0 10px 30px -10px var(--bubble-user-shadow)'
           }}
         >
           <TypedText text={message.content} isStreaming={isStreaming} />

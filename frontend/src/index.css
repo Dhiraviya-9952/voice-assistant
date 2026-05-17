@@ -20,6 +20,42 @@
   --glow-blue: 0 0 20px rgba(59, 130, 246, 0.4);
   --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.4);
   --glow-purple: 0 0 20px rgba(139, 92, 246, 0.4);
+  
+  --bubble-assistant-bg: #12121a;
+  --bubble-assistant-border: rgba(255, 255, 255, 0.05);
+  --bubble-assistant-shadow: rgba(0, 0, 0, 0.5);
+  --bubble-user-shadow: rgba(37, 99, 235, 0.3);
+  --header-btn-bg: rgba(255, 255, 255, 0.05);
+  --header-btn-border: rgba(255, 255, 255, 0.1);
+  --header-btn-text: rgba(255, 255, 255, 0.7);
+}
+
+.theme-light {
+  --bg-primary: #f5f6fa;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(0, 0, 0, 0.03);
+  --border-subtle: rgba(0, 0, 0, 0.06);
+  --border-glow: rgba(59, 130, 246, 0.15);
+  --accent-blue: #2563eb;
+  --accent-cyan: #0891b2;
+  --accent-purple: #7c3aed;
+  --accent-green: #059669;
+  --text-primary: #1e293b;
+  --text-secondary: rgba(30, 41, 59, 0.7);
+  --text-muted: rgba(30, 41, 59, 0.4);
+  --shadow-orb: 0 0 60px -10px rgba(37, 99, 235, 0.2),
+                0 0 120px -20px rgba(124, 58, 237, 0.15);
+  --glow-blue: 0 0 15px rgba(37, 99, 235, 0.2);
+  --glow-cyan: 0 0 15px rgba(8, 145, 178, 0.2);
+  --glow-purple: 0 0 15px rgba(124, 58, 237, 0.2);
+  
+  --bubble-assistant-bg: #ffffff;
+  --bubble-assistant-border: rgba(0, 0, 0, 0.08);
+  --bubble-assistant-shadow: rgba(15, 23, 42, 0.06);
+  --bubble-user-shadow: rgba(37, 99, 235, 0.2);
+  --header-btn-bg: rgba(0, 0, 0, 0.04);
+  --header-btn-border: rgba(0, 0, 0, 0.08);
+  --header-btn-text: #475569;
 }
 
 @tailwind base;

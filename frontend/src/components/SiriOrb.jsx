@@ -23,8 +23,8 @@ function WaveCanvas({ status }) {
     const H = canvas.height;
     const colors = colorMap[status] || colorMap.idle;
 
-    const speedMap = { idle: 0.4, listening: 2.2, thinking: 1.4, speaking: 3.0, disconnected: 0.1 };
-    const ampMap   = { idle: 12,  listening: 32,  thinking: 22,  speaking: 40,  disconnected: 4  };
+    const speedMap = { idle: 0.4, listening: 2.2, thinking: 1.4, speaking: 2.0, disconnected: 0.1 };
+    const ampMap   = { idle: 12,  listening: 32,  thinking: 22,  speaking: 28,  disconnected: 4  };
     const speed = speedMap[status] || 0.4;
     const amp   = ampMap[status] || 12;
 
@@ -270,7 +270,7 @@ function MicIcon({ status, ringColor, size }) {
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: [1, 1.3, 1], opacity: [0.7, 0, 0.7] }}
             exit={{ opacity: 0 }}
-            transition={{ duration: isListening ? 1.4 : 0.9, repeat: Infinity, ease: 'easeOut' }}
+            transition={{ duration: 1.4, repeat: Infinity, ease: 'easeOut' }}
           />
         )}
       </AnimatePresence>
