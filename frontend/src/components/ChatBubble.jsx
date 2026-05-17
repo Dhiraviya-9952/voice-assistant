@@ -12,21 +12,14 @@ function TypedText({ text, isStreaming }) {
 }
 
 const KyureeusLogo = () => (
-  <div className="w-8 h-8 rounded-full bg-[#1a1a2e] flex items-center justify-center border border-blue-500/30 overflow-hidden flex-shrink-0">
-    <div className="relative w-full h-full flex items-center justify-center">
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20" />
-      <span className="text-blue-400 font-bold text-[10px] z-10">K</span>
-    </div>
+  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10 overflow-hidden flex-shrink-0">
+    <img src="/kyureeus_logo2.png" alt="K" className="w-full h-full object-contain scale-110" />
   </div>
 );
 
 const UserAvatar = () => (
-  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center shadow-lg border border-white/10 flex-shrink-0">
-    <div className="w-4 h-4 rounded-full bg-white/20 relative">
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-2 h-2 rounded-full bg-white/40" />
-      </div>
-    </div>
+  <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center border border-white/10 overflow-hidden flex-shrink-0 shadow-lg">
+    <img src="/user_avatar.png" alt="User" className="w-full h-full object-cover scale-150" />
   </div>
 );
 

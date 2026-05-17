@@ -94,7 +94,7 @@ const STATE_CFG = {
   idle:         { glow: 'rgba(59,130,246,0.3)',   ring: '#3b82f6', pulse: [1, 1.03, 1],  dur: 4,   ripples: 0, glowOpacity: [0.2, 0.5, 0.2] },
   listening:    { glow: 'rgba(6,182,212,0.55)',   ring: '#06b6d4', pulse: [1, 1.08, 1],  dur: 1.5, ripples: 3, glowOpacity: [0.4, 0.75, 0.4] },
   thinking:     { glow: 'rgba(139,92,246,0.45)',  ring: '#7c3aed', pulse: [1, 1.05, 1],  dur: 2,   ripples: 2, glowOpacity: [0.3, 0.65, 0.3] },
-  speaking:     { glow: 'rgba(16,185,129,0.5)',   ring: '#10b981', pulse: [1, 1.12, 0.96, 1.08, 1], dur: 0.6, ripples: 3, glowOpacity: [0.5, 0.85, 0.5] },
+  speaking:     { glow: 'rgba(16,185,129,0.5)',   ring: '#10b981', pulse: [1, 1.06, 1],  dur: 2,   ripples: 2, glowOpacity: [0.4, 0.7, 0.4] },
   disconnected: { glow: 'rgba(100,100,120,0.15)', ring: '#4b5563', pulse: [1, 1, 1],     dur: 8,   ripples: 0, glowOpacity: [0.1, 0.2, 0.1] },
 };
 
@@ -302,10 +302,10 @@ function MicIcon({ status, ringColor, size }) {
           isListening
             ? { scale: [1, 1.08, 1] }
             : isSpeaking
-            ? { scale: [1, 1.12, 0.96, 1.08, 1] }
+            ? { scale: [1, 1.08, 1] }
             : { scale: 1 }
         }
-        transition={{ duration: isListening ? 1.4 : 0.7, repeat: Infinity, ease: 'easeInOut' }}
+        transition={{ duration: isListening ? 1.4 : 1.4, repeat: Infinity, ease: 'easeInOut' }}
       >
         <AnimatePresence mode="wait">
           {isThinking ? (

@@ -7,7 +7,7 @@ const STATUS_META = {
   listening:    { label: 'Listening', color: '#06b6d4', Icon: Mic,     desc: 'Speak now…' },
   thinking:     { label: 'Thinking', color: '#8b5cf6', Icon: Cpu,     desc: 'Processing your request…' },
   speaking:     { label: 'Speaking', color: '#3b82f6', Icon: Volume2, desc: 'Playing response…' },
-  disconnected: { label: 'Offline',  color: '#ef4444', Icon: WifiOff, desc: 'Reconnecting…' },
+  disconnected: { label: 'Offline',  color: '#ef4444', Icon: WifiOff, desc: 'Connection lost' },
 };
 
 export default function StatusBar({ status }) {
