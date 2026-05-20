@@ -11,6 +11,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
  *  - Message history with streaming flag for typing cursor
  */
 export function useVoiceChat() {
+  const [isSessionActive, setIsSessionActive] = useState(false);
   const [status, setStatus]   = useState('disconnected');
   const [messages, setMessages] = useState([]);
 
@@ -96,6 +97,11 @@ export function useVoiceChat() {
 
   // ── WebSocket + Mic setup ─────────────────────────────────────
   useEffect(() => {
+    if (!isSessionActive) {
+      setStatus('disconnected');
+      return;
+    }
+
     let micActive  = true;
     let micStream  = null;
     let processor  = null;
@@ -275,12 +281,39 @@ export function useVoiceChat() {
       processor?.disconnect();
       ctx?.close();
       micStream?.getTracks().forEach(t => t.stop());
+
+      // Stop and release playback resources
+      try {
+        if (activeAudioRef.current) {
+          activeAudioRef.current.pause();
+          if (activeAudioRef.current.src) {
+            URL.revokeObjectURL(activeAudioRef.current.src);
+          }
+        }
+      } catch (err) {}
+      activeAudioRef.current = null;
+      audioQueueRef.current = [];
+      isPlayingRef.current = false;
+      window.assistantVolume = 0;
     };
-  }, [playNext, finalizeLastMessage]);
+  }, [isSessionActive, playNext, finalizeLastMessage]);
+
+  const startSession = useCallback(() => {
+    setMessages([]);
+    setIsSessionActive(true);
+  }, []);
+
+  const stopSession = useCallback(() => {
+    setIsSessionActive(false);
+    setMessages([]);
+  }, []);
 
   return {
+    isSessionActive,
     status,
     messages,
+    startSession,
+    stopSession,
     clearMessages: () => setMessages([]),
   };
 }
