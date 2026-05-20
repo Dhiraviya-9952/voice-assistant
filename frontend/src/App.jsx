@@ -5,6 +5,7 @@ import { Trash2, Settings, MessageSquare, Mic, Sparkles, Send, Globe, Zap, Histo
 import SiriOrb from './components/SiriOrb';
 import ChatBubble from './components/ChatBubble';
 import AmbientBackground from './components/AmbientBackground';
+import ScreenEdgeGlow from './components/ScreenEdgeGlow';
 import { useVoiceChat } from './hooks/useVoiceChat';
 
 // ─── Status Label ─────────────────────────────────────────────────────────
@@ -78,6 +79,7 @@ export default function App() {
   return (
     <div className="relative w-full h-screen overflow-hidden flex flex-col bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans transition-colors duration-500">
       <AmbientBackground status={status} theme={theme} />
+      <ScreenEdgeGlow status={status} />
       
       {/* ── Header ── */}
       <header className="relative z-50 flex items-center justify-between px-8 py-6">

@@ -27,11 +27,35 @@ CHUNK_SIZE = 1024
 
 # Common Whisper hallucinations to ignore
 HALLUCINATIONS = [
-    r"thank you", r"i'm sorry", r"you're welcome", r"subscribe to", 
+    r"i'm sorry", r"you're welcome", r"subscribe to", 
     r"i'm going to have a fight", r"watch more", r"thanks for watching",
     r"^\s*you\s*$", r"^\s*yeah\s*$", r"^\s*so\s*$", r"^\s*go to\s*$", r"^\s*bye\s*$",
-    r"^\s*thank you very much\s*$", r"^\s*thank you for watching\s*$"
+    r"^\s*thank you for watching\s*$"
 ]
+
+def has_repetition_loop(text: str) -> bool:
+    # Normalize text by removing punctuation and converting to lowercase
+    normalized = re.sub(r'[^\w\s]', '', text.lower()).strip()
+    words = normalized.split()
+    if len(words) < 4:
+        return False
+    
+    # Check for consecutive repeating sequences of length 1, 2, 3, or 4
+    for n in range(1, 5):
+        # For single words (n=1), require at least 4 consecutive repetitions (e.g. "word word word word")
+        # For multi-word phrases (n>=2), require 3 consecutive repetitions (e.g. "phrase phrase phrase")
+        repeats_needed = 4 if n == 1 else 3
+        for i in range(len(words) - repeats_needed * n + n):
+            pattern = words[i:i+n]
+            match = True
+            for k in range(1, repeats_needed):
+                start = i + k * n
+                if words[start:start+n] != pattern:
+                    match = False
+                    break
+            if match:
+                return True
+    return False
 
 executor = ThreadPoolExecutor(max_workers=8)
 
@@ -122,6 +146,7 @@ async def ws_handler(websocket: WebSocket):
                     audio_16k = full_audio[::3]
                     def _transcribe():
                         # Highly optimized Whisper transcription parameters for maximum accuracy from a distance
+                        # Added repetition_penalty, no_repeat_ngram_size, and stricter compression threshold to kill loops
                         segs, _ = whisper_model.transcribe(
                             audio_16k,
                             language="en",
@@ -130,7 +155,11 @@ async def ws_handler(websocket: WebSocket):
                             vad_parameters=dict(min_speech_duration_ms=400, min_silence_duration_ms=800),
                             condition_on_previous_text=False,
                             temperature=[0.0, 0.2, 0.4],
-                            no_speech_threshold=0.6
+                            no_speech_threshold=0.6,
+                            repetition_penalty=1.3,
+                            no_repeat_ngram_size=3,
+                            compression_ratio_threshold=2.0,
+                            log_prob_threshold=-0.8
                         )
                         return " ".join(s.text for s in segs).strip()
                     
@@ -138,12 +167,12 @@ async def ws_handler(websocket: WebSocket):
                     
                     junk = [r"^\s*$", r"^[\.\'\,\!\?\s]+$", r"^(uh+|um+|ah+|hmm+)[\.\s]*$"]
                     
-                    # Filter out noise-induced hallucinations
-                    is_hallucination = any(re.search(p, text, re.I) for p in HALLUCINATIONS)
+                    # Filter out noise-induced hallucinations and repetition loops
+                    is_hallucination = any(re.search(p, text, re.I) for p in HALLUCINATIONS) or has_repetition_loop(text)
                     
                     if not text or is_hallucination or any(re.match(p, text, re.I) for p in junk):
                         if is_hallucination:
-                            print(f"🔇 Filtered hallucination: '{text}'")
+                            print(f"🔇 Filtered hallucination/repetition: '{text}'")
                         audio_buffer, is_speaking_vad, silence_frames, speech_frames = [], False, 0, 0
                         await websocket.send_json({"type": "assistant_idle"})
                         continue
